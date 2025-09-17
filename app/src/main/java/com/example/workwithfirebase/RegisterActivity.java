@@ -20,8 +20,6 @@ import com.google.firebase.auth.FirebaseAuth;
 public class RegisterActivity extends AppCompatActivity {
     public Button btnLogin, btnRegister;
     public EditText etEmail, etPassword;
-    public HelperAuth firebaseHelper; // הכרזה על משתנה עזר
-    private FirebaseAuth.AuthStateListener authStateListener;
 
     public void init()
     {
@@ -29,7 +27,6 @@ public class RegisterActivity extends AppCompatActivity {
         btnRegister=findViewById(R.id.btnRRegister);
         etEmail=findViewById(R.id.etREmail);
         etPassword=findViewById(R.id.etRPassword);
-
     }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,19 +35,6 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
 
         init();
-        btnLogin.setEnabled(false);
-        btnRegister.setEnabled(false);
-
-        // נוסיף מאזין למצב ההתחברות
-        authStateListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(FirebaseAuth firebaseAuth) {
-                // המאזין הזה יופעל ברגע שפיירבייס מוכן
-                firebaseHelper = HelperAuth.getInstance();
-                btnLogin.setEnabled(true);
-                btnRegister.setEnabled(true);
-            }
-        };
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -61,11 +45,18 @@ public class RegisterActivity extends AppCompatActivity {
         btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                firebaseHelper = HelperAuth.getInstance();
                 String email=etEmail.getText().toString();
                 String password=etPassword.getText().toString();
                 Log.d("MARIELA","Register "+email);
-                firebaseHelper.signUp(RegisterActivity.this,email,password );
+
+                Auth.signUp(RegisterActivity.this, email, password, task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(RegisterActivity.this, "Signup Successful", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(RegisterActivity.this, MainActivity.class));
+                    } else {
+                        Toast.makeText(RegisterActivity.this, "Signup Failed: " + task.getException(), Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -73,20 +64,5 @@ public class RegisterActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-    }
-    @Override
-    protected void onStart() {
-        super.onStart();
-        // נוסיף את המאזין כשפעילות מתחילה
-        FirebaseAuth.getInstance().addAuthStateListener(authStateListener);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        // נסיר את המאזין כשפעילות נפסקת כדי למנוע דליפות זיכרון
-        if (authStateListener != null) {
-            FirebaseAuth.getInstance().removeAuthStateListener(authStateListener);
-        }
     }
 }

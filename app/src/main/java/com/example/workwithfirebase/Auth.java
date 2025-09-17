@@ -1,29 +1,31 @@
 package com.example.workwithfirebase;
 
 import android.app.Activity;
-import android.app.Application;
-import android.content.Context;
-import android.widget.Toast;
+import android.util.Log;
 
-import com.google.firebase.FirebaseApp;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
-public class Auth extends Application {
-    private static FirebaseAuth mAuth;
+public class Auth {
+    private static final FirebaseAuth auth = FirebaseAuth.getInstance();
 
-    public void onCreate() {
-        super.onCreate();
-        FirebaseApp.initializeApp(this);
-
-        // מייצרים את מופע ה-FirebaseAuth מיד לאחר מכן
-
+    public static void signIn(Activity activity, String email, String password, OnCompleteListener<AuthResult> onCompleteListener) {
+        auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(activity, onCompleteListener);
     }
 
-    public static FirebaseAuth getAuthInstance() {
-        // אתחול עצלני: ניצור את המופע של FirebaseAuth רק אם הוא עדיין null
-        if (mAuth == null) {
-            mAuth = FirebaseAuth.getInstance();
-        }
-        return mAuth;
+    public static void signOut() {
+        auth.signOut();
+    }
+
+    public static void signUp(Activity activity, String email, String password, OnCompleteListener<AuthResult> onCompleteListener) {
+        auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(activity, onCompleteListener);
+    }
+
+    public static FirebaseUser getCurrentUser() {
+        if (auth.getCurrentUser() == null)
+            Log.d("Eitan Debug General", "Returning a null user");
+        return auth.getCurrentUser();
     }
 }
